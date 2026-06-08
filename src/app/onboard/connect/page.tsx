@@ -32,15 +32,41 @@ export default function ConnectTools() {
   const router = useRouter();
   const [connected, setConnected] = useState<Set<string>>(new Set());
   const [connecting, setConnecting] = useState<string | null>(null);
+  const [error, setError] = useState("");
 
   const handleConnect = async (tool: Tool) => {
     setConnecting(tool.slug);
-    // TODO: call API to generate Composio connect link, open in popup
-    // For now, simulate connection
-    setTimeout(() => {
-      setConnected((prev) => new Set(prev).add(tool.slug));
+    setError("");
+    try {
+      const res = await fetch("/api/composio/link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ appSlug: tool.slug }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError(data.error || `Failed to connect ${tool.name}`);
+        setConnecting(null);
+        return;
+      }
+      const { connectUrl } = await res.json();
+
+      // Open OAuth in a popup
+      const popup = window.open(connectUrl, `connect_${tool.slug}`, "width=600,height=700,popup=yes");
+
+      // Poll for popup close (user completed or cancelled OAuth)
+      const timer = setInterval(() => {
+        if (!popup || popup.closed) {
+          clearInterval(timer);
+          // Assume connected on popup close (callback records in Firestore)
+          setConnected((prev) => new Set(prev).add(tool.slug));
+          setConnecting(null);
+        }
+      }, 500);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to connect");
       setConnecting(null);
-    }, 1500);
+    }
   };
 
   const categories = [...new Set(curatedTools.map((t) => t.category))];
@@ -57,6 +83,12 @@ export default function ConnectTools() {
         Connect the apps you already use. Sterling works best with access to
         your business data.
       </p>
+
+      {error && (
+        <div className="mb-6 px-4 py-2 rounded-xl bg-[var(--accent-red)]/10 border border-[var(--accent-red)]/30 text-[var(--accent-red)] text-sm">
+          {error}
+        </div>
+      )}
 
       {connected.size > 0 && (
         <div className="mb-6 px-4 py-2 rounded-full bg-[var(--accent)]/10 border border-[var(--accent)]/30 text-[var(--accent)] text-sm inline-block">
@@ -98,7 +130,7 @@ export default function ConnectTools() {
                         <span className="text-[var(--success)] text-lg">✓</span>
                       )}
                       {isConnecting && (
-                        <span className="text-[var(--accent)] text-sm">...</span>
+                        <span className="text-[var(--accent)] text-sm">connecting...</span>
                       )}
                     </button>
                   );

@@ -42,6 +42,8 @@ export default function AboutBusiness() {
   const [industry, setIndustry] = useState("");
   const [size, setSize] = useState("");
   const [focus, setFocus] = useState<string[]>([]);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
   const toggleFocus = (area: string) => {
     setFocus((prev) =>
@@ -49,7 +51,27 @@ export default function AboutBusiness() {
     );
   };
 
-  const canContinue = company.trim() && industry && size;
+  const canContinue = company.trim() && industry && size && !saving;
+
+  const handleContinue = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/onboard/business", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ company: company.trim(), industry, size, focusAreas: focus }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save business info");
+      }
+      router.push("/onboard/connect");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setSaving(false);
+    }
+  };
 
   return (
     <div>
@@ -128,11 +150,12 @@ export default function AboutBusiness() {
         </div>
       </div>
 
+      {error && (
+        <p className="mt-4 text-sm text-red-400">{error}</p>
+      )}
+
       <button
-        onClick={() => {
-          // TODO: save to Firestore
-          router.push("/onboard/connect");
-        }}
+        onClick={handleContinue}
         disabled={!canContinue}
         className={`w-full mt-8 px-6 py-4 rounded-full font-semibold text-lg transition-colors ${
           canContinue
@@ -140,7 +163,7 @@ export default function AboutBusiness() {
             : "bg-[var(--card)] text-[var(--muted)] cursor-not-allowed"
         }`}
       >
-        Continue →
+        {saving ? "Saving..." : "Continue →"}
       </button>
     </div>
   );

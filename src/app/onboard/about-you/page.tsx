@@ -32,8 +32,30 @@ export default function AboutYou() {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [source, setSource] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const canContinue = name.trim() && role;
+  const canContinue = name.trim() && role && !saving;
+
+  const handleContinue = async () => {
+    setSaving(true);
+    setError("");
+    try {
+      const res = await fetch("/api/onboard/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), role, source }),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Failed to save profile");
+      }
+      router.push("/onboard/about-business");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+      setSaving(false);
+    }
+  };
 
   return (
     <div>
@@ -95,11 +117,12 @@ export default function AboutYou() {
         </div>
       </div>
 
+      {error && (
+        <p className="mt-4 text-sm text-red-400">{error}</p>
+      )}
+
       <button
-        onClick={() => {
-          // TODO: save to Firestore
-          router.push("/onboard/about-business");
-        }}
+        onClick={handleContinue}
         disabled={!canContinue}
         className={`w-full mt-8 px-6 py-4 rounded-full font-semibold text-lg transition-colors ${
           canContinue
@@ -107,7 +130,7 @@ export default function AboutYou() {
             : "bg-[var(--card)] text-[var(--muted)] cursor-not-allowed"
         }`}
       >
-        Continue →
+        {saving ? "Saving..." : "Continue →"}
       </button>
     </div>
   );
