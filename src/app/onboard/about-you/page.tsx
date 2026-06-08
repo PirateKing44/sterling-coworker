@@ -74,7 +74,7 @@ export default function AboutYou() {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Allen Brouwer"
+            placeholder="First Name Last Name"
             className="w-full px-4 py-3 rounded-xl bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
           />
         </div>

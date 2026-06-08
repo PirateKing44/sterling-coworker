@@ -20,46 +20,59 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Composio not configured" }, { status: 500 });
   }
 
-  const { appSlug } = await request.json();
+  const { appSlug, appName } = await request.json();
   if (!appSlug) {
     return NextResponse.json({ error: "appSlug required" }, { status: 400 });
   }
 
   try {
-    // Generate a connection link via Composio REST API
-    const entityId = `${session.teamId}_${session.userId}`;
-    const redirectUrl = `${MAIN_APP_URL}/api/composio/callback?user_id=${session.userId}&team_id=${session.teamId}&app=${appSlug}`;
+    // Mirror the working backend flow (server/src/services/composioRest.ts):
+    // POST /connected_accounts/link with { auth_config_id, user_id, callback_url }.
+    // Connections are keyed by the Slack userId so the agent (which executes as
+    // that same userId) can use them. The callback points at the main app's
+    // /api/composio/callback so the connection is recorded in shared Firestore.
+    const slug = appSlug.toLowerCase().trim().replace(/\s+/g, "_");
+    const callbackUrl = `${MAIN_APP_URL}/api/composio/callback?user_id=${encodeURIComponent(
+      session.userId
+    )}&team_id=${encodeURIComponent(session.teamId)}`;
 
-    const response = await fetch(`${COMPOSIO_BASE}/connectedAccounts`, {
+    const response = await fetch(`${COMPOSIO_BASE}/connected_accounts/link`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "x-api-key": COMPOSIO_API_KEY,
       },
       body: JSON.stringify({
-        integrationId: appSlug,
-        entityId,
-        redirectUri: "https://backend.composio.dev/api/v3/toolkits/auth/callback",
-        data: {
-          redirect_url: redirectUrl,
-        },
+        auth_config_id: slug,
+        user_id: session.userId,
+        callback_url: callbackUrl,
       }),
     });
 
+    const data = await response.json().catch(() => ({}));
+
     if (!response.ok) {
-      const errText = await response.text();
-      console.error("Composio connect link error:", errText);
+      console.error("Composio connect link error:", JSON.stringify(data));
+      // Distinguish "this app isn't set up in Composio yet" from a real failure.
+      const notConfigured =
+        data?.error?.slug === "Auth_Config_NotFound" ||
+        data?.error?.message?.includes("Default auth config not found");
+      if (notConfigured) {
+        return NextResponse.json(
+          { error: `${appName || appSlug} isn't available to connect yet` },
+          { status: 502 }
+        );
+      }
       return NextResponse.json(
         { error: "Failed to generate connect link" },
         { status: 502 }
       );
     }
 
-    const data = await response.json();
-    const connectUrl = data.redirectUrl || data.connectionUrl || data.url;
+    const connectUrl = data.redirect_url;
 
     if (!connectUrl) {
-      console.error("No connect URL in Composio response:", data);
+      console.error("No connect URL in Composio response:", JSON.stringify(data));
       return NextResponse.json(
         { error: "No connect URL returned" },
         { status: 502 }

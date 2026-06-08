@@ -90,7 +90,7 @@ export default function AboutBusiness() {
             type="text"
             value={company}
             onChange={(e) => setCompany(e.target.value)}
-            placeholder="Sterling AI"
+            placeholder="Acme Inc."
             className="w-full px-4 py-3 rounded-xl bg-[var(--card)] border border-[var(--border)] text-[var(--foreground)] placeholder:text-[var(--muted)] focus:outline-none focus:border-[var(--accent)] transition-colors"
           />
         </div>

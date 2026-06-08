@@ -41,7 +41,7 @@ export default function ConnectTools() {
       const res = await fetch("/api/composio/link", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ appSlug: tool.slug }),
+        body: JSON.stringify({ appSlug: tool.slug, appName: tool.name }),
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
