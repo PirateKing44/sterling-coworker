@@ -6,6 +6,32 @@ const COMPOSIO_BASE = "https://backend.composio.dev/api/v3";
 // Use main app's callback so connections are recorded in shared Firestore
 const MAIN_APP_URL = process.env.STERLING_APP_URL || "https://sterling-agent-497252720926.us-east1.run.app";
 
+// Connect-page slugs that differ from Composio's toolkit slugs.
+const TOOLKIT_SLUG_ALIASES: Record<string, string> = {
+  facebook: "metaads",
+  googleanalytics: "google_analytics",
+};
+
+/**
+ * Resolve a toolkit slug to its real Composio auth config ID (`ac_...`).
+ * The connect link API requires the auth_config_id, NOT the toolkit slug.
+ * Looked up at runtime so it keeps working if configs are recreated.
+ */
+async function resolveAuthConfigId(slug: string): Promise<string | null> {
+  const toolkitSlug = TOOLKIT_SLUG_ALIASES[slug] || slug;
+  const res = await fetch(
+    `${COMPOSIO_BASE}/auth_configs?toolkit_slug=${encodeURIComponent(toolkitSlug)}`,
+    { headers: { "x-api-key": COMPOSIO_API_KEY! } }
+  );
+  if (!res.ok) {
+    console.error("Composio auth_configs lookup failed:", res.status, await res.text());
+    return null;
+  }
+  const data = await res.json().catch(() => ({}));
+  const items = Array.isArray(data?.items) ? data.items : [];
+  return items[0]?.id ?? null;
+}
+
 /**
  * Generates a Composio OAuth connect link for a given app.
  * The user clicks this link to authorize their account.
@@ -36,6 +62,15 @@ export async function POST(request: NextRequest) {
       session.userId
     )}&team_id=${encodeURIComponent(session.teamId)}`;
 
+    // The connect API needs the auth config ID (ac_...), not the toolkit slug.
+    const authConfigId = await resolveAuthConfigId(slug);
+    if (!authConfigId) {
+      return NextResponse.json(
+        { error: `${appName || appSlug} isn't available to connect yet` },
+        { status: 502 }
+      );
+    }
+
     const response = await fetch(`${COMPOSIO_BASE}/connected_accounts/link`, {
       method: "POST",
       headers: {
@@ -43,7 +78,7 @@ export async function POST(request: NextRequest) {
         "x-api-key": COMPOSIO_API_KEY,
       },
       body: JSON.stringify({
-        auth_config_id: slug,
+        auth_config_id: authConfigId,
         user_id: session.userId,
         callback_url: callbackUrl,
       }),
@@ -53,16 +88,6 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       console.error("Composio connect link error:", JSON.stringify(data));
-      // Distinguish "this app isn't set up in Composio yet" from a real failure.
-      const notConfigured =
-        data?.error?.slug === "Auth_Config_NotFound" ||
-        data?.error?.message?.includes("Default auth config not found");
-      if (notConfigured) {
-        return NextResponse.json(
-          { error: `${appName || appSlug} isn't available to connect yet` },
-          { status: 502 }
-        );
-      }
       return NextResponse.json(
         { error: "Failed to generate connect link" },
         { status: 502 }
