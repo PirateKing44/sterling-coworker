@@ -15,20 +15,36 @@ export async function POST() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const stripe = getStripe();
 
+  // Base $50 flat price (STRIPE_BASE_PRICE_ID; STRIPE_PRICE_ID kept as fallback
+  // for back-compat) + a usage-metered overage price tied to the credits meter.
+  const basePriceId = process.env.STRIPE_BASE_PRICE_ID || process.env.STRIPE_PRICE_ID;
+  const meteredPriceId = process.env.STRIPE_METERED_PRICE_ID;
+  if (!basePriceId) {
+    return NextResponse.json({ error: "Stripe base price not configured" }, { status: 500 });
+  }
+
+  const lineItems: Array<{ price: string; quantity?: number }> = [
+    { price: basePriceId, quantity: 1 },
+  ];
+  // Metered prices take no quantity — usage is reported via meter events.
+  if (meteredPriceId) {
+    lineItems.push({ price: meteredPriceId });
+  }
+
+  const metadata = {
+    teamId: session.teamId,
+    userId: session.userId,
+    teamName: session.teamName,
+  };
+
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "subscription",
     payment_method_types: ["card"],
-    line_items: [
-      {
-        price: process.env.STRIPE_PRICE_ID!,
-        quantity: 1,
-      },
-    ],
-    metadata: {
-      teamId: session.teamId,
-      userId: session.userId,
-      teamName: session.teamName,
-    },
+    line_items: lineItems,
+    metadata,
+    // Mirror metadata onto the subscription so customer.subscription.* and
+    // invoice.* webhooks (which don't carry checkout metadata) can resolve teamId.
+    subscription_data: { metadata },
     success_url: `${appUrl}/onboard/success`,
     cancel_url: `${appUrl}/onboard/complete`,
   });
