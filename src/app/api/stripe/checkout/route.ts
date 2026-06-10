@@ -15,20 +15,12 @@ export async function POST() {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
   const stripe = getStripe();
 
-  // Base $50 flat price (STRIPE_BASE_PRICE_ID; STRIPE_PRICE_ID kept as fallback
-  // for back-compat) + a usage-metered overage price tied to the credits meter.
+  // Prepaid credit-wallet: a single LICENSED bucket price ($50 = 20,000 credits)
+  // with quantity 1. The subscription quantity ratchets up to the customer's
+  // high-water usage over time; mid-cycle the app auto-recharges off-session.
   const basePriceId = process.env.STRIPE_BASE_PRICE_ID || process.env.STRIPE_PRICE_ID;
-  const meteredPriceId = process.env.STRIPE_METERED_PRICE_ID;
   if (!basePriceId) {
     return NextResponse.json({ error: "Stripe base price not configured" }, { status: 500 });
-  }
-
-  const lineItems: Array<{ price: string; quantity?: number }> = [
-    { price: basePriceId, quantity: 1 },
-  ];
-  // Metered prices take no quantity — usage is reported via meter events.
-  if (meteredPriceId) {
-    lineItems.push({ price: meteredPriceId });
   }
 
   const metadata = {
@@ -40,10 +32,12 @@ export async function POST() {
   const checkoutSession = await stripe.checkout.sessions.create({
     mode: "subscription",
     payment_method_types: ["card"],
-    line_items: lineItems,
+    line_items: [{ price: basePriceId, quantity: 1 }],
     metadata,
     // Mirror metadata onto the subscription so customer.subscription.* and
     // invoice.* webhooks (which don't carry checkout metadata) can resolve teamId.
+    // Subscription mode attaches the card to the customer, so the app can reuse
+    // it OFF-SESSION for auto-recharge top-ups (resolved via paymentMethods.list).
     subscription_data: { metadata },
     success_url: `${appUrl}/onboard/success`,
     cancel_url: `${appUrl}/onboard/complete`,

@@ -6,7 +6,12 @@ function getStripe() {
   return new Stripe(process.env.STRIPE_SECRET_KEY!);
 }
 
-const INCLUDED_CREDITS = 20000;
+const BUCKET_CREDITS = 20000; // one $50 bucket = 20,000 credits
+
+/** Subscription quantity = number of $50 buckets (the high-water tier). */
+function quantityFromSubscription(sub: Stripe.Subscription): number {
+  return sub.items?.data?.[0]?.quantity || 1;
+}
 
 /** Period bounds live on the subscription (older API) or its items (newer API). */
 function periodFromSubscription(sub: Stripe.Subscription): { start: string | null; end: string | null } {
@@ -64,20 +69,28 @@ export async function POST(request: NextRequest) {
       case "checkout.session.completed": {
         const session = event.data.object as Stripe.Checkout.Session;
         const teamId = session.metadata?.teamId;
+        const subId = session.subscription as string;
         if (teamId) {
+          let qty = 1;
+          try {
+            const sub = await stripe.subscriptions.retrieve(subId);
+            qty = quantityFromSubscription(sub);
+          } catch {
+            /* default qty 1 */
+          }
           await db.collection("workspaces").doc(teamId).set(
             {
               planTier: "team",
               plan: "team",
               stripeCustomerId: session.customer as string,
-              stripeSubscriptionId: session.subscription as string,
+              stripeSubscriptionId: subId,
               subscriptionStatus: "active",
-              // Seed the metering counters for the first billing period.
-              creditsIncluded: INCLUDED_CREDITS,
+              subscriptionQuantity: qty,
+              // Prepaid wallet: seed the balance to the bucket allotment.
+              creditBalance: qty * BUCKET_CREDITS,
               creditsUsedThisPeriod: 0,
-              tokensUsedThisPeriod: 0,
-              warned80: false,
-              warned100: false,
+              rechargeCentsThisCycle: 0,
+              autoRechargeEnabled: true,
               paidAt: new Date().toISOString(),
               updatedAt: new Date().toISOString(),
             },
@@ -96,10 +109,13 @@ export async function POST(request: NextRequest) {
         });
         if (teamId) {
           const { start, end } = periodFromSubscription(sub);
+          // Mirror quantity (tier) + status; the wallet itself only resets on a
+          // paid invoice (see invoice.payment_succeeded), not on quantity changes.
           await db.collection("workspaces").doc(teamId).set(
             {
               stripeSubscriptionId: sub.id,
               subscriptionStatus: sub.status,
+              subscriptionQuantity: quantityFromSubscription(sub),
               currentPeriodStart: start,
               currentPeriodEnd: end,
               updatedAt: new Date().toISOString(),
@@ -117,25 +133,29 @@ export async function POST(request: NextRequest) {
           teamId: invoice.metadata?.teamId,
           customerId: invoice.customer as string,
         });
+        // Only subscription invoices reach here (off-session top-ups are bare
+        // PaymentIntents, not invoices). Each one is a CYCLE RESET: refill the
+        // wallet to qty × 20,000 and zero the per-cycle counters.
         if (teamId) {
-          // New billing cycle → reset the period counters and warning flags.
+          let qty = 1;
           let start: string | null = null;
           let end: string | null = null;
           if (subId) {
             try {
               const sub = await stripe.subscriptions.retrieve(subId);
+              qty = quantityFromSubscription(sub);
               ({ start, end } = periodFromSubscription(sub));
             } catch {
-              /* period bounds best-effort */
+              /* best-effort */
             }
           }
           await db.collection("workspaces").doc(teamId).set(
             {
               subscriptionStatus: "active",
+              subscriptionQuantity: qty,
+              creditBalance: qty * BUCKET_CREDITS,
               creditsUsedThisPeriod: 0,
-              tokensUsedThisPeriod: 0,
-              warned80: false,
-              warned100: false,
+              rechargeCentsThisCycle: 0,
               ...(start ? { currentPeriodStart: start } : {}),
               ...(end ? { currentPeriodEnd: end } : {}),
               updatedAt: new Date().toISOString(),
@@ -173,6 +193,13 @@ export async function POST(request: NextRequest) {
             { merge: true }
           );
         }
+        break;
+      }
+
+      case "payment_intent.succeeded": {
+        // Off-session auto-recharge top-ups (metadata.kind === "topup") are
+        // credited synchronously by the app at charge time — this webhook is a
+        // deliberate NO-OP so credits are never double-counted.
         break;
       }
 

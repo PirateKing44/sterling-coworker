@@ -3,9 +3,10 @@
 import { useState } from "react";
 
 const features = [
-  "Unlimited messages with Sterling",
+  "20,000 credits per month to start",
+  "Auto top-up keeps Sterling running (+10,000 credits for $25)",
+  "Plan grows with your usage — downgrade anytime",
   "All 900+ integrations via Composio",
-  "Personalized business intelligence",
   "Channel monitoring & proactive insights",
   "Priority support",
 ];
@@ -48,9 +49,12 @@ export default function OnboardComplete() {
       <div className="p-6 rounded-2xl bg-[var(--card)] border border-[var(--border)] text-left mb-8">
         <div className="flex items-baseline justify-between mb-4">
           <h3 className="text-lg font-bold">Sterling Team</h3>
-          <div>
-            <span className="text-3xl font-bold">$50</span>
-            <span className="text-[var(--muted)]">/mo</span>
+          <div className="text-right">
+            <div>
+              <span className="text-3xl font-bold">$50</span>
+              <span className="text-[var(--muted)]">/mo</span>
+            </div>
+            <div className="text-xs text-[var(--muted)]">for 20,000 credits</div>
           </div>
         </div>
 
