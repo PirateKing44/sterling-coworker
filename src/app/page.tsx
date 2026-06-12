@@ -455,7 +455,7 @@ export default function Home() {
             <span className="text-[var(--muted)]">/ month</span>
           </div>
           <p className="text-sm text-[var(--muted)] mb-6">
-            Complete flat workspace pricing. Free 14-day trial with <strong>10,000 shared credits</strong> included.
+            Complete flat workspace pricing.
           </p>
 
           <ul className="space-y-3 text-sm text-left mb-8">
