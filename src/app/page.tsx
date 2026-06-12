@@ -597,6 +597,11 @@ export default function Home() {
               <strong className="text-[var(--accent-red)]">XPRIZE</strong> Entry
             </span>
           </div>
+          <div className="flex items-center gap-6 text-sm text-[var(--muted)]">
+            <Link href="/privacy" className="hover:text-[var(--foreground)] transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-[var(--foreground)] transition-colors">Terms</Link>
+            <a href="mailto:hello@sterlingcoworker.com" className="hover:text-[var(--foreground)] transition-colors">Support</a>
+          </div>
           <p className="text-sm text-[var(--muted)]">
             © 2026 Sterling AI. All rights reserved.
           </p>
