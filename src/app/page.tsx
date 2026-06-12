@@ -385,35 +385,37 @@ export default function Home() {
           <br />
           <span className="gradient-text-google">built on Google</span>
         </h2>
-        <p className="text-center text-[var(--muted)] mb-10">
-          Sterling runs on Google Cloud Run, Firestore, and Google Gemini — secure, battle-tested, fast, and reliable.
+        <p className="text-center text-[var(--muted)] mb-10 max-w-2xl mx-auto leading-relaxed">
+          Most AI &ldquo;employees&rdquo; need a VPN, a spare Mac Mini humming in a closet, and an IT person just to switch on
+          &mdash; and they put your data at risk. Sterling lives on Google&apos;s cloud, so you&apos;re up and running in a few
+          clicks, with your business locked down the whole time.
         </p>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
             {
-              icon: ShieldCheck,
+              icon: Server,
               color: "var(--google-blue)",
-              title: "Secure",
-              body: "Runs in an isolated Google Cloud environment. Every write action is human-approval-gated and all input is treated as untrusted.",
+              title: "Live in a few clicks",
+              body: "No VPNs. No Mac Mini in a closet. No IT contractor. Sterling runs on Google's cloud, so you connect Slack and go — setup takes minutes, not weeks.",
             },
             {
-              icon: Server,
+              icon: ShieldCheck,
               color: "var(--google-green)",
-              title: "Battle-tested",
-              body: "Built on the same Google Cloud foundation that powers global-scale products used by billions every day.",
+              title: "Your business stays locked down",
+              body: "Your data runs inside Google's secured cloud — never a random server or an employee's laptop. And every action that changes anything waits for your one-tap approval.",
             },
             {
               icon: Zap,
               color: "var(--google-yellow)",
-              title: "Fast",
-              body: "Direct Gemini reasoning returns real results in seconds — connecting, computing, and reporting, not just chatting.",
+              title: "Answers in seconds",
+              body: "Sterling thinks and acts on Google's fast infrastructure, so audits, drafts, and reports come back while you're still in the conversation — not 'sometime today.'",
             },
             {
               icon: Activity,
               color: "var(--accent-red)",
-              title: "Reliable",
-              body: "Auto-scaling Cloud Run and managed Firestore mean no servers to babysit and consistent, dependable uptime.",
+              title: "Always on, nothing to babysit",
+              body: "It scales itself and never needs patching, restarting, or maintenance. Sterling just shows up and works — every single day, without you lifting a finger.",
             },
           ].map((pillar) => {
             const Icon = pillar.icon;
@@ -461,8 +463,8 @@ export default function Home() {
               "20,000 Monthly Workspace Credits",
               "Unlimited Workspace Seats (add your entire team)",
               "Unlimited App Integrations",
-              "Unused credits roll over dynamically",
-              "Additional credits at $10 per 5,000 bundle",
+              "Low-balance alert at 80% usage — never caught off guard",
+              "Easy top-ups: $25 for 10,000 extra credits",
             ].map((item) => (
               <li key={item} className="flex items-start gap-3">
                 <span className="text-[var(--google-green)] mt-0.5">✓</span>
@@ -496,10 +498,9 @@ export default function Home() {
           <div className="rounded-xl border border-[var(--google-green)]/30 bg-[var(--google-green)]/[0.04] p-5 text-left mb-8">
             <p className="text-sm font-semibold text-[var(--foreground)] mb-2">Never any surprises</p>
             <p className="text-sm text-[var(--muted)] leading-relaxed">
-              If you run low, Sterling pauses write-actions and tells you right in Slack — no surprise charges.
-              Top up anytime with <strong className="text-[var(--foreground)]">$10 / 5,000-credit</strong> bundles,
-              or <strong className="text-[var(--foreground)]">pause or cancel your account anytime</strong> from your
-              dashboard. No contracts, no lock-in.
+              We&apos;ll give you a heads-up right in Slack the moment you reach <strong className="text-[var(--foreground)]">80% of your monthly credits</strong> — so you&apos;re never caught off guard.
+              Need more? Top up instantly with <strong className="text-[var(--foreground)]">$25 for 10,000 credits</strong>. And if you ever run all the way out, Sterling simply pauses until you top up or your credits refresh next month.
+              <strong className="text-[var(--foreground)]"> Pause or cancel anytime</strong> from your dashboard — no contracts, no lock-in, no surprise charges.
             </p>
           </div>
 
@@ -523,55 +524,55 @@ export default function Home() {
           {[
             {
               q: "Is Sterling secure?",
-              a: "Yes. Sterling runs on Google Cloud's isolated infrastructure, so your workspace operates in its own secure environment. Every write-action (sending an email, creating a campaign, updating a record) is gated behind explicit human approval inside Slack, and all incoming content is treated as untrusted by design. We never log your secrets.",
+              a: "Seriously secure. Sterling lives inside Google's secured cloud — not on a random server or someone's laptop — so your workspace runs in its own protected environment. Anything that actually changes something (sending an email, creating a campaign, updating a record) waits for your one-tap approval in Slack, every input is treated as untrusted by design, and we never log your secrets. You stay in control, always.",
             },
             {
-              q: "How robust and reliable is it? What is it built on?",
-              a: "Sterling is built on Google Cloud Run, Firestore, and Google Gemini — the same battle-tested foundation that powers global-scale Google products. It auto-scales with your usage, there are no servers for you to manage, and Gemini reasoning returns results in seconds, not minutes.",
+              q: "How easy is it to set up — do I need servers or IT?",
+              a: "Nope. No VPNs, no spare Mac Mini in a closet, no IT contractor. Because Sterling runs on Google's cloud, you just add it to Slack, connect your apps, and go. It scales itself, never needs patching or restarting, and is up and running in minutes — not weeks.",
             },
             {
               q: "Can I cancel anytime?",
-              a: "Absolutely. There are no contracts and no lock-in. You can pause or cancel your account at any time from your dashboard, and unused credits roll over while your workspace is active.",
+              a: "Of course — and you're in control the whole way. No contracts, no lock-in. Pause or cancel anytime from your dashboard in a couple of clicks — no awkward 'talk to sales' calls required.",
             },
             {
               q: "What does it connect to / hook up with?",
-              a: "Sterling lives in your Slack and connects to 3,000+ apps and API endpoints — including Shopify, Klaviyo, Meta & Google Ads, QuickBooks, popular CRMs, and Google Workspace (Gmail, Calendar, Drive). If your tools have an API, Sterling can likely work with them.",
+              a: "Pretty much everything you already use. Sterling lives in your Slack and connects to 3,000+ apps — Shopify, Klaviyo, Meta & Google Ads, QuickBooks, your CRM, and Google Workspace (Gmail, Calendar, Drive). If your tools have an API, Sterling can almost certainly put them to work for you.",
             },
             {
               q: "How do I get help or support?",
-              a: "You can reach our team directly from your dashboard or by emailing support. During the beta we work closely with every workspace to make sure Sterling is delivering value from week one.",
+              a: "We've got you. Reach our team straight from your dashboard or by email, and we'll jump in fast. We work hand-in-hand with every workspace to make sure Sterling is paying for itself from day one.",
             },
             {
               q: "What can Sterling actually do?",
-              a: "Sterling executes real work: it audits ad spend and store performance, builds visual reports, drafts emails and campaigns in your brand voice, enriches and logs leads to your CRM, reconciles data across tools, and runs scheduled tasks on autopilot — all from a simple Slack message.",
+              a: "It does the work — not just the talking. Sterling audits your ad spend and store performance, builds polished visual reports, drafts emails and campaigns in your brand voice, enriches and logs leads to your CRM, reconciles data across your tools, and runs recurring tasks on autopilot — all from a single Slack message. Think of it as a tireless teammate who never drops the ball.",
             },
             {
               q: "Is it good for ecommerce?",
-              a: "Yes — ecommerce is a core use case. Sterling connects to Shopify, Klaviyo, and your ad platforms to run weekly audits, compare ROAS, recover abandoned carts, and draft promotional campaigns for your approval.",
+              a: "It's a perfect fit. Sterling plugs into Shopify, Klaviyo, and your ad platforms to run weekly audits, compare ROAS, win back abandoned carts, and draft promo campaigns ready for your approval — so you grow revenue without drowning in dashboards.",
             },
             {
               q: "Is it good for real estate professionals?",
-              a: "Yes. Sterling enriches and logs leads to your CRM, drafts listing and follow-up emails, compiles market and pipeline summaries, and keeps your team coordinated — so agents spend more time with clients and less on admin.",
+              a: "Absolutely. Sterling captures and enriches leads straight to your CRM, drafts listing and follow-up emails, compiles market and pipeline summaries, and keeps your team in sync — so agents spend their time closing, not doing admin.",
             },
             {
               q: "Is it good for coaches and consultants?",
-              a: "Definitely. Sterling drafts client communications and content in your voice, organizes notes and action items from Slack, schedules recurring check-ins, and keeps your CRM and calendar in sync automatically.",
+              a: "Made for it. Sterling writes client emails and content in your voice, turns messy Slack threads into clean action items, schedules your recurring check-ins, and keeps your CRM and calendar perfectly in sync — so you can focus on your clients, not your inbox.",
             },
             {
               q: "Is it good for virtual assistants?",
-              a: "Yes — VAs love Sterling because it handles the repetitive execution. It drafts emails, builds reports, moves data between tools, and runs routine tasks on a schedule, freeing you to focus on higher-value work for your clients.",
+              a: "VAs love it. Sterling takes the repetitive grind off your plate — drafting emails, building reports, moving data between tools, and running routine tasks on a schedule — so you deliver more for every client in a fraction of the time.",
             },
             {
               q: "Do I need to know how to code?",
-              a: "No. Sterling is built for non-technical business owners. You ask in plain English inside Slack, and Sterling figures out the APIs, writes and runs the code, and delivers the finished result — no setup, no servers, no engineering.",
+              a: "Not even a little. Sterling is built for business owners, not engineers. You ask in plain English inside Slack, and Sterling figures out the APIs, writes and runs the code, and hands you the finished result — no setup, no servers, no technical headaches.",
             },
             {
               q: "What happens if I run out of credits?",
-              a: "Sterling simply pauses write-actions and lets you know in Slack — there are never surprise charges. You can top up instantly with $10 / 5,000-credit bundles, or wait for your monthly credits to refresh.",
+              a: "No nasty surprises, ever. Sterling gives you a heads-up in Slack the moment you hit 80% of your monthly credits. Want to keep the momentum going? Top up instantly with $25 for 10,000 credits. And if you do run all the way out, Sterling just pauses until you top up or your fresh credits land next month.",
             },
             {
               q: "How fast can my team get started?",
-              a: "Most teams are up and running in an afternoon — add Sterling to Slack, connect your apps, and start delegating. Many workspaces report their whole team is 'AI-native' within the first week.",
+              a: "Most teams can get up and running within a few minutes. We designed Sterling to be so easy that even the most junior person on your team can get it set up and running in no time flat — add it to Slack, connect your apps, and start delegating.",
             },
           ].map((item) => (
             <details key={item.q} className="group rounded-xl border border-[var(--border)] bg-[var(--card)] overflow-hidden">
